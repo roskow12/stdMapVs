@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+
+*CmakeCache.txt
+src/mapTest
+src/CMakeFiles
+CMakeCache.txt
+CMakeFiles
+
