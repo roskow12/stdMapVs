@@ -5,8 +5,12 @@
 #include <utility>
 #include <deque>
 #include <algorithm>
+#include <fstream>
+#include <chrono>
 
 using std::cout;
+using std::cin;
+using namespace std::chrono;
 
 class NodeObject {
 public:
@@ -21,18 +25,34 @@ public:
 typedef std::pair<uint32_t, NodeObject> NodePair;
 
 struct deck {  
-  std::deque<NodePair> ds;
+  std::deque<NodePair> deq;
 
   auto insert(NodePair newObj) {    
-    auto it = std::lower_bound(ds.begin(), ds.end(), newObj, 
+    auto it = std::lower_bound(deq.begin(), deq.end(), newObj, 
       [](NodePair lhs, NodePair rhs) -> bool {return lhs.first < rhs.first;});
     
-    if(it == ds.end() || newObj.first < (*it).first){ // element wasn't in map, insert it
+    if(it == deq.end() || newObj.first < (*it).first){ // element wasn't in map, insert it
       //cout << "inserting " << newObj.first << ", lower_bound == " << (*it).first << '\n';
-      return std::make_pair(ds.insert(it, newObj), true);
+      return std::make_pair(deq.insert(it, newObj), true);
     }
     else{ // element already exists
       //cout << "not inserting " << newObj.first << ", lower_bound == " << (*it).first << '\n';
+      return std::make_pair(it, false);
+    }
+  }
+};
+
+struct sorted_vector {  
+  std::vector<NodePair> v;
+
+  auto insert(NodePair newObj) {    
+    auto it = std::lower_bound(v.begin(), v.end(), newObj, 
+      [](NodePair lhs, NodePair rhs) -> bool {return lhs.first < rhs.first;});
+    
+    if(it == v.end() || newObj.first < (*it).first){ // element wasn't in map, insert it
+      return std::make_pair(v.insert(it, newObj), true);
+    }
+    else{ // element already exists
       return std::make_pair(it, false);
     }
   }
@@ -43,30 +63,42 @@ NodeObject::NodeObject(uint64_t x, uint64_t y, uint32_t z, bool bsVal) : x(x), y
 
 int main(){
 
-  std::map<uint32_t, NodeObject> ds1;
-  std::unordered_map<uint32_t, NodeObject> ds2;
-  deck ds3;
+  // std::map<uint32_t, NodeObject> ds;
+  // std::unordered_map<uint32_t, NodeObject> ds;
+  // deck ds;
+  sorted_vector ds; ds.v.reserve(90000);
 
-  ds3.insert(NodePair(1, NodeObject()));
-  ds3.insert(NodePair(45, NodeObject()));
-  ds3.insert(NodePair(2, NodeObject()));
-  ds3.insert(NodePair(66, NodeObject()));
-  ds3.insert(NodePair(5, NodeObject()));
-  ds3.insert(NodePair(345, NodeObject()));
-  ds3.insert(NodePair(13, NodeObject()));
-  ds3.insert(NodePair(51, NodeObject()));
-  ds3.insert(NodePair(331, NodeObject()));
-  ds3.insert(NodePair(45731, NodeObject()));
-  ds3.insert(NodePair(75431, NodeObject()));
-  ds3.insert(NodePair(13, NodeObject()));
-  ds3.insert(NodePair(51, NodeObject()));
-  ds3.insert(NodePair(21, NodeObject()));
-  ds3.insert(NodePair(11, NodeObject()));
-  ds3.insert(NodePair(61, NodeObject()));
-  ds3.insert(NodePair(7, NodeObject()));
+  std::ifstream ifs("input/input.txt");
 
-  for(auto it = ds3.ds.begin(); it != ds3.ds.end(); ++it)
-    std::cout << (*it).first << " ";
-  std::cout << '\n';
+  if(ifs.is_open())
+    cout << "ifs open\n";
+  else
+    cout << "file not open\n";
+
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+
+  int x;
+  while(ifs >> x){
+    ds.insert(NodePair(x, NodeObject()));
+  }
+
+  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+  auto duration0 = duration_cast<microseconds>(t2-t1).count();
+  cout << "insert duraton: " << duration0 << '\n';
+
+  ifs.close();
+
+  high_resolution_clock::time_point t3 = high_resolution_clock::now();
+
+  // for(auto it = ds.begin(); it != ds.end(); ++it)
+  for(auto it = ds.v.begin(); it != ds.v.end(); ++it)
+    (*it).second.x += 100;
+
+  high_resolution_clock::time_point t4 = high_resolution_clock::now();
+
+  auto duration1 = duration_cast<microseconds>(t4-t3).count();
+  cout << "iterate duraton: " << duration1 << '\n';
+
 	return 0;
 }
